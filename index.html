@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0a0a0a; --card: #161616; --card2: #1c1c1c;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+    --green: #94dd26; --green-dim: rgba(148,221,38,0.12);
+    --text: #f5f5f5; --muted: rgba(245,245,245,0.38); --muted2: rgba(245,245,245,0.6);
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Sniglet', cursive; min-height: 100vh; }
+  .app { max-width: 420px; margin: 0 auto; padding-bottom: 24px; }
+  .tabs { display: flex; margin: 0 20px 20px; background: var(--card); border-radius: 10px; padding: 3px; gap: 3px; }
+  .tab { flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--muted); font-family: 'Sniglet', cursive; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .tab.active { background: var(--green); color: #0a0a0a; }
+  .header { padding: 28px 20px 0; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+  .logo span { color: var(--green); }
+  .streak { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border2); border-radius: 100px; padding: 6px 12px 6px 8px; font-size: 12px; color: var(--muted2); }
+  .level-row { padding: 20px 20px 6px; display: flex; justify-content: space-between; align-items: baseline; }
+  .level-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .level-num { font-size: 16px; color: var(--green); }
+  .xp-wrap { padding: 0 20px 4px; }
+  .xp-bg { height: 3px; background: var(--card2); border-radius: 2px; overflow: hidden; }
+  .xp-fill { height: 100%; width: 0%; background: var(--green); border-radius: 2px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+  .xp-sub { padding: 6px 20px 18px; font-size: 10px; color: var(--muted); text-align: right; }
+  .date-badge { margin: 0 20px 14px; display: flex; align-items: center; gap: 8px; }
+  .date-pill { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; background: var(--card); border: 1px solid var(--border); border-radius: 100px; padding: 4px 10px; }
+  .day-label { font-size: 10px; color: var(--green); }
+  .daily-card { margin: 0 20px 14px; background: var(--card); border: 1px solid var(--border2); border-radius: 16px; padding: 18px; position: relative; overflow: hidden; }
+  .daily-card::after { content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle at top right, rgba(148,221,38,0.08), transparent 70%); pointer-events: none; }
+  .daily-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--green); margin-bottom: 10px; }
+  .live-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .daily-title { font-size: 20px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+  .daily-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; margin-bottom: 16px; }
+  .daily-row { display: flex; justify-content: space-between; align-items: center; }
+  .xp-badge { font-size: 12px; color: var(--green); background: var(--green-dim); border: 1px solid rgba(148,221,38,0.2); border-radius: 100px; padding: 4px 10px; }
+  .btn-go { background: var(--green); color: #0a0a0a; border: none; border-radius: 8px; padding: 9px 18px; font-family: 'Sniglet', cursive; font-size: 13px; cursor: pointer; transition: opacity 0.15s; }
+  .btn-go:active { opacity: 0.75; }
+  .btn-go.done { background: transparent; color: var(--green); border: 1px solid var(--green); cursor: default; }
+  .section-label { padding: 0 20px 10px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .ch-list { padding: 0 20px; display: flex; flex-direction: column; gap: 8px; }
+  .ch-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .ch-card:active { opacity: 0.75; }
+  .ch-card.done { border-color: rgba(148,221,38,0.2); background: rgba(148,221,38,0.04); }
+  .ch-card.done .ch-name { color: var(--muted2); }
+  .ch-card.done .ch-icon-wrap { background: var(--green-dim); }
+  .ch-icon-wrap { width: 38px; height: 38px; border-radius: 10px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .ch-info { flex: 1; min-width: 0; }
+  .ch-name { font-size: 13px; margin-bottom: 2px; }
+  .ch-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .ch-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .ch-xp { font-size: 11px; color: var(--green); }
+  .check-circle { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.2s; }
+  .ch-card.done .check-circle { background: var(--green); border-color: var(--green); color: #0a0a0a; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px 20px; }
+  .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 14px; }
+  .stat-n { font-size: 36px; font-weight: 800; color: var(--green); line-height: 1; margin-bottom: 4px; }
+  .stat-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .ach-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 0 20px; }
+  .ach { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 8px; text-align: center; }
+  .ach.unlocked { border-color: rgba(148,221,38,0.3); background: rgba(148,221,38,0.05); }
+  .ach.locked { opacity: 0.3; }
+  .ach-ico { font-size: 24px; display: block; margin-bottom: 6px; }
+  .ach-n { font-size: 10px; color: var(--muted2); line-height: 1.3; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-70px); background: var(--green); color: #0a0a0a; padding: 9px 18px; border-radius: 100px; font-weight: 800; font-size: 13px; z-index: 999; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; font-family: 'Sniglet', cursive; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">GRIND<span>.</span></div>
+    <div class="streak">🔥 <span id="streak">0</span> streak</div>
+  </div>
+  <div class="level-row">
+    <span class="level-label">Livello</span>
+    <span class="level-num" id="level-num">LV. 1</span>
+  </div>
+  <div class="xp-wrap"><div class="xp-bg"><div class="xp-fill" id="xp-fill"></div></div></div>
+  <div class="xp-sub"><span id="xp-cur">0</span> / 500 XP</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('sfide',this)">Sfide</button>
+    <button class="tab" onclick="switchTab('progressi',this)">Progressi</button>
+  </div>
+
+  <div id="tab-sfide" class="panel active">
+    <div class="date-badge">
+      <div class="date-pill" id="date-pill"></div>
+      <div class="day-label" id="day-label"></div>
+    </div>
+    <div class="daily-card">
+      <div class="daily-tag"><span class="live-dot"></span> Sfida del giorno</div>
+      <div class="daily-title" id="daily-title"></div>
+      <div class="daily-desc" id="daily-desc"></div>
+      <div class="daily-row">
+        <div class="xp-badge" id="daily-xp"></div>
+        <button class="btn-go" id="daily-btn" onclick="completeDaily()">Fatto</button>
+      </div>
+    </div>
+    <div class="section-label">Sfide di oggi</div>
+    <div class="ch-list" id="ch-list"></div>
+  </div>
+
+  <div id="tab-progressi" class="panel">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-n" id="s-done">0</div><div class="stat-l">Completate</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-streak">0</div><div class="stat-l">Streak</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-xp">0</div><div class="stat-l">XP totale</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-lv">1</div><div class="stat-l">Livello</div></div>
+    </div>
+    <div class="section-label" style="padding-top:4px">Achievement</div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const allChallenges = [
+  {icon:'🎤',name:'Rap da 30 secondi',desc:'Improvvisa un rap su qualsiasi argomento e registralo',xp:45},
+  {icon:'🎵',name:'Crea un beat con le mani',desc:'Fai una sequenza ritmica solo con le mani e la bocca, almeno 30 sec',xp:40},
+  {icon:'🎸',name:'Impara 4 accordi',desc:'Prendi una chitarra o guarda su YouTube e impara 4 accordi',xp:65},
+  {icon:'🎹',name:'Suona una melodia',desc:'Impara a suonare una canzone semplice su qualsiasi strumento',xp:60},
+  {icon:'🎙️',name:'Doppia un film',desc:'Manda avanti un video senza audio e inventa le voci dei personaggi',xp:45},
+  {icon:'🎼',name:'Scrivi una canzone',desc:'Scrivi il testo di una canzone originale, almeno un ritornello',xp:55},
+  {icon:'🥁',name:'Impara un ritmo',desc:'Impara un ritmo famoso sulla batteria o su una superficie',xp:40},
+  {icon:'🎺',name:'Fai una cover',desc:'Ricrea una canzone che conosci con la voce o uno strumento',xp:50},
+  {icon:'🎻',name:'Trova 3 canzoni nuove',desc:'Ascolta 3 brani che non hai mai sentito e scegli il tuo preferito',xp:30},
+  {icon:'🔊',name:'Crea una playlist',desc:'Fai una playlist di almeno 10 canzoni su un tema specifico',xp:35},
+  {icon:'🎨',name:'Disegna un personaggio',desc:'Inventa e disegna un personaggio originale con nome e superpoteri',xp:50},
+  {icon:'✏️',name:'Disegna la tua mano',desc:'Fai un ritratto realistico della tua mano su carta',xp:40},
+  {icon:'🖌️',name:'Dipingi qualcosa',desc:'Usa qualsiasi colore e dipingi un paesaggio o un oggetto',xp:55},
+  {icon:'📐',name:'Disegno geometrico',desc:'Crea un disegno fatto solo di forme geometriche',xp:35},
+  {icon:'🖼️',name:'Ridisegna un logo',desc:'Prendi un logo famoso e ridisegnalo a mano libera',xp:40},
+  {icon:'🗿',name:'Scultura da plastilina',desc:'Crea una miniatura di un animale o oggetto con plastilina',xp:50},
+  {icon:'📸',name:'Foto artistica',desc:'Scatta una foto creativa con luce o prospettiva insolita',xp:40},
+  {icon:'🌈',name:'Mandala colorato',desc:'Disegna e colora un mandala da zero',xp:45},
+  {icon:'🖍️',name:'Fumetto da 4 vignette',desc:'Crea un mini fumetto con inizio, sviluppo, colpo di scena e fine',xp:55},
+  {icon:'🎭',name:'Maschera fai da te',desc:'Crea una maschera o un costume con materiali che hai in casa',xp:60},
+  {icon:'📚',name:'Leggi 10 pagine',desc:'Qualsiasi libro, qualsiasi genere. Solo 10 pagine.',xp:35},
+  {icon:'✍️',name:'Scrivi una storia',desc:'Scrivi almeno mezza pagina di una storia inventata',xp:45},
+  {icon:'📖',name:'Leggi un articolo lungo',desc:'Trova e leggi un articolo lungo su un argomento che non conosci',xp:30},
+  {icon:'📝',name:'Diario del giorno',desc:'Scrivi almeno 20 righe su come è andata la tua giornata',xp:35},
+  {icon:'🔠',name:'Impara 10 parole nuove',desc:'Cerca 10 parole che non conosci e impara il loro significato',xp:40},
+  {icon:'📜',name:'Scrivi una poesia',desc:'Crea una poesia di almeno 8 versi su qualsiasi tema',xp:50},
+  {icon:'🗒️',name:'Lista dei sogni',desc:'Scrivi 20 cose che vuoi fare prima dei 20 anni',xp:35},
+  {icon:'💬',name:'Racconto in 100 parole',desc:'Scrivi una storia completa usando esattamente 100 parole',xp:55},
+  {icon:'📰',name:'Scrivi un articolo',desc:"Scegli un tema e scrivi un mini-articolo come se fossi un giornalista",xp:45},
+  {icon:'🔍',name:'Ricerca approfondita',desc:'Scegli un argomento e cerca tutto quello che puoi sapere in 15 min',xp:40},
+  {icon:'🧠',name:'Risolvi un enigma',desc:'Trova e risolvi un rompicapo logico online',xp:50},
+  {icon:'🧩',name:'Risolvi un cubo',desc:'Prova a risolvere un cubo di Rubik o un puzzle difficile',xp:60},
+  {icon:'♟️',name:'Partita a scacchi',desc:'Gioca una partita a scacchi contro un computer o un amico',xp:50},
+  {icon:'🔢',name:'Sfida matematica',desc:'Risolvi 10 problemi di matematica senza calcolatrice',xp:45},
+  {icon:'🧮',name:'Calcola a mente',desc:'Fai 20 calcoli veloci a mente e controlla i risultati',xp:35},
+  {icon:'🎲',name:'Inventa un gioco',desc:'Crea le regole di un gioco originale e spiegale per iscritto',xp:55},
+  {icon:'🔐',name:'Crea un codice segreto',desc:'Inventa un alfabeto o codice cifrato e scrivi un messaggio',xp:50},
+  {icon:'🗺️',name:'Mappa a memoria',desc:"Disegna la mappa del tuo quartiere o della tua città a memoria",xp:45},
+  {icon:'🧬',name:'Impara qualcosa di scientifico',desc:"Studia un concetto di fisica, chimica o biologia che non conosci",xp:40},
+  {icon:'🌍',name:'Capitali del mondo',desc:'Impara le capitali di 10 paesi che non conoscevi',xp:35},
+  {icon:'🏃',name:'Corri 1 km',desc:'Esci e fai almeno 1 km di corsa o camminata veloce',xp:55},
+  {icon:'💪',name:'100 flessioni',desc:'Fai 100 flessioni, anche divise in più serie',xp:60},
+  {icon:'🎯',name:'50 tiri liberi',desc:'Pallacanestro, carta cestino — 50 tiri di fila',xp:40},
+  {icon:'⚽',name:'Juggles da record',desc:'Fai più keepie uppie di fila che riesci col pallone',xp:45},
+  {icon:'🤸',name:'Mossa acrobatica',desc:'Impara una capriola, la ruota o qualsiasi acrobazia di base',xp:65},
+  {icon:'🧘',name:'10 minuti di stretching',desc:'Fai una sessione completa di stretching di almeno 10 minuti',xp:30},
+  {icon:'🚴',name:'Giro in bici',desc:'Fai un percorso in bici di almeno 5 km',xp:50},
+  {icon:'🏊',name:'Nuota 10 vasche',desc:'Fai 10 vasche complete in piscina o al mare',xp:60},
+  {icon:'🧗',name:'Sfida di equilibrio',desc:'Stai in equilibrio su un piede per 3 minuti totali',xp:35},
+  {icon:'🏋️',name:'Circuit training',desc:'Fai 3 serie da: 20 squat, 15 flessioni, 10 burpees',xp:70},
+  {icon:'🍳',name:'Cucina qualcosa',desc:'Prepara uno snack o un piatto da solo senza aiuto',xp:55},
+  {icon:'🎂',name:'Fai un dolce',desc:'Prepara un dolce semplice da zero, senza mix già pronti',xp:60},
+  {icon:'🥗',name:'Insalata creativa',desc:"Prepara un piatto sano e creativo con quello che hai in frigo",xp:40},
+  {icon:'🍕',name:'Pizza fatta in casa',desc:"Fai l'impasto e prepara una pizza da zero",xp:75},
+  {icon:'🥪',name:'Panino gourmet',desc:'Crea il panino più buono e creativo che riesci a immaginare',xp:35},
+  {icon:'🍝',name:'Pasta originale',desc:'Inventa una ricetta di pasta con ingredienti insoliti',xp:50},
+  {icon:'🧹',name:'Riordina la tua stanza',desc:'Pulisci e riordina completamente la tua stanza',xp:45},
+  {icon:'🔧',name:'Sistema qualcosa',desc:'Aggiusta o riordina qualcosa in casa che è rotto o in disordine',xp:50},
+  {icon:'🌱',name:'Pianta qualcosa',desc:'Pianta un seme o una piantina e prenditi cura di lei',xp:40},
+  {icon:'♻️',name:'Riciclo creativo',desc:'Crea qualcosa di utile o decorativo con materiali da riciclare',xp:55},
+  {icon:'🗺️',name:'Esplora un posto nuovo',desc:'Vai in un angolo del tuo quartiere dove non sei mai stato',xp:65},
+  {icon:'🌄',name:'Alzati con il sole',desc:"Alzati prima dell'alba e scatta una foto al cielo",xp:60},
+  {icon:'🌙',name:'Guarda le stelle',desc:'Passa 20 minuti fuori di notte a guardare il cielo',xp:50},
+  {icon:'🏕️',name:'Pic nic improvvisato',desc:'Prepara qualcosa da mangiare e mangia fuori in un posto bello',xp:55},
+  {icon:'🌊',name:'Vai al mare o al fiume',desc:"Passa almeno 30 minuti in riva all'acqua",xp:50},
+  {icon:'🌲',name:'Escursione nel verde',desc:'Cammina in un parco o bosco per almeno 30 minuti',xp:55},
+  {icon:'🏙️',name:'Turista in casa tua',desc:'Visita un museo, monumento o posto turistico della tua città',xp:65},
+  {icon:'🚌',name:'Prendi un mezzo a caso',desc:'Sali su un autobus a caso e scendi dopo 3 fermate',xp:40},
+  {icon:'📍',name:'Trova un posto segreto',desc:'Trova un posto tranquillo e nascosto dove non sei mai stato',xp:60},
+  {icon:'🌅',name:'Guarda il tramonto',desc:'Guardati il tramonto completo senza usare il telefono',xp:45},
+  {icon:'💬',name:'Chiedi come sta',desc:"Scrivi un messaggio a qualcuno che non senti da un po'",xp:30},
+  {icon:'🤝',name:'Fai un complimento',desc:'Fai un complimento sincero a 3 persone diverse oggi',xp:30},
+  {icon:'📞',name:'Chiama invece di scrivere',desc:'Chiama qualcuno invece di mandare un messaggio',xp:35},
+  {icon:'👴',name:'Parla con un anziano',desc:'Fai una conversazione vera con un nonno o una persona anziana',xp:40},
+  {icon:'🌱',name:'Fai qualcosa di buono',desc:'Aiuta qualcuno in casa senza che te lo chiedano',xp:40},
+  {icon:'🎁',name:'Regalo handmade',desc:'Crea un regalo fatto a mano per qualcuno a cui tieni',xp:60},
+  {icon:'🙏',name:'Ringrazia qualcuno',desc:'Scrivi un messaggio lungo e sincero per ringraziare qualcuno',xp:35},
+  {icon:'🍦',name:'Offri qualcosa',desc:'Offri qualcosa da mangiare o bere a qualcuno senza motivo',xp:30},
+  {icon:'😂',name:'Fai ridere qualcuno',desc:'Trova un modo per far ridere di gusto almeno una persona',xp:35},
+  {icon:'🤗',name:'Organizza qualcosa',desc:"Organizza un'uscita o un'attività con i tuoi amici",xp:50},
+  {icon:'🧘',name:'5 minuti di silenzio',desc:'Stai fermo senza telefono per 5 minuti interi',xp:30},
+  {icon:'😴',name:'Vai a letto presto',desc:"Vai a letto almeno un'ora prima del solito",xp:35},
+  {icon:'📵',name:'1 ora senza telefono',desc:'Stai un\'ora intera senza toccare il telefono',xp:50},
+  {icon:'💧',name:"Bevi 2 litri d'acqua",desc:"Bevi almeno 2 litri di acqua nell'arco della giornata",xp:30},
+  {icon:'☀️',name:'Mattina produttiva',desc:'Fai 3 cose utili prima delle 10 di mattina',xp:45},
+  {icon:'📋',name:'Lista delle priorità',desc:'Scrivi le 5 cose più importanti da fare questa settimana',xp:30},
+  {icon:'🪞',name:'Discorso motivazionale',desc:'Parla a te stesso davanti allo specchio per 2 minuti',xp:40},
+  {icon:'🌬️',name:'Respirazione profonda',desc:'Fai 5 minuti di respirazione lenta e consapevole',xp:25},
+  {icon:'🛁',name:'Relax totale',desc:'Fai un bagno o una doccia lunga senza fretta',xp:25},
+  {icon:'🌻',name:'Pensa positivo',desc:'Scrivi 10 cose belle della tua vita in questo momento',xp:35},
+  {icon:'💻',name:'Impara a programmare',desc:'Segui un tutorial di coding per principianti per 30 minuti',xp:65},
+  {icon:'🎮',name:'Batti il tuo record',desc:'Supera il tuo miglior punteggio in qualsiasi gioco',xp:45},
+  {icon:'📱',name:'Crea un video creativo',desc:'Gira e monta un video di almeno 1 minuto su qualsiasi tema',xp:55},
+  {icon:'🖥️',name:'Impara una scorciatoia',desc:'Impara 10 scorciatoie da tastiera che non conoscevi',xp:30},
+  {icon:'🤖',name:'Parla con una AI',desc:'Fai una conversazione interessante con una AI su un tema complesso',xp:35},
+  {icon:'📊',name:'Crea una presentazione',desc:'Fai una presentazione di 5 slide su un argomento che ami',xp:50},
+  {icon:'🔒',name:'Aggiorna le password',desc:'Cambia e migliora le password dei tuoi account principali',xp:35},
+  {icon:'🎬',name:'Crea un meme',desc:'Crea un meme originale e divertente',xp:30},
+  {icon:'📡',name:'Come funziona internet',desc:'Studia come funziona internet e spiega il concetto a qualcuno',xp:45},
+  {icon:'🛡️',name:'Privacy check',desc:'Controlla le impostazioni privacy dei tuoi social e aggiornale',xp:35},
+  {icon:'🎭',name:'Impara un trucco',desc:'Trova un trucco di magia o di carte e allenati finché non riesci',xp:50},
+  {icon:'🎪',name:'Fai lo spettacolo',desc:'Esegui un numero davanti a qualcuno: magia, danza, canto, altro',xp:60},
+  {icon:'🕺',name:'Impara una coreografia',desc:'Segui un tutorial di danza e impara una coreografia base',xp:55},
+  {icon:'🎤',name:'Karaoke da solo',desc:'Canta una canzone intera ad alta voce come se fossi sul palco',xp:40},
+  {icon:'🤹',name:'Impara la giocoleria',desc:'Allenati a fare giocoleria con 2 o più oggetti',xp:65},
+  {icon:'😄',name:'Stand up comedy',desc:'Scrivi e recita 5 barzellette o battute originali',xp:50},
+  {icon:'🗣️',name:'Discorso pubblico',desc:'Prepara e recita un discorso di 2 minuti davanti a qualcuno',xp:55},
+  {icon:'🃏',name:'Trucco di carte',desc:'Impara un trucco di carte e eseguilo su 3 persone',xp:45},
+  {icon:'🎩',name:'Improvvisazione teatrale',desc:'Fai una scena improvvisata di 3 minuti con qualcuno',xp:50},
+  {icon:'🇯🇵',name:'5 parole in giapponese',desc:'Impara 5 parole in giapponese e scrivile a memoria',xp:40},
+  {icon:'🇪🇸',name:'5 parole in spagnolo',desc:'Impara 5 parole in spagnolo che non conoscevi',xp:35},
+  {icon:'🇫🇷',name:'5 parole in francese',desc:'Impara 5 parole in francese e usale in una frase',xp:35},
+  {icon:'🇩🇪',name:'5 parole in tedesco',desc:'Impara 5 parole in tedesco e scrivile con la pronuncia',xp:35},
+  {icon:'🇨🇳',name:'Scrivi in cinese',desc:'Impara a scrivere 3 caratteri cinesi e il loro significato',xp:50},
+  {icon:'🇷🇺',name:'Alfabeto cirillico',desc:'Impara a leggere l\'alfabeto cirillico di base',xp:55},
+  {icon:'🗣️',name:'Presentati in 3 lingue',desc:'Impara a presentarti in 3 lingue diverse',xp:45},
+  {icon:'🌐',name:'Scopri una cultura nuova',desc:'Studia le tradizioni di un paese che non conosci per 20 minuti',xp:40},
+  {icon:'📺',name:'Guarda in lingua straniera',desc:'Guarda 20 minuti di un video o film in lingua straniera',xp:40},
+  {icon:'✉️',name:'Lettera in inglese',desc:'Scrivi una lettera formale o informale in inglese senza traduttore',xp:50},
+  {icon:'🔬',name:'Esperimento casalingo',desc:'Fai un esperimento scientifico con materiali che hai in casa',xp:55},
+  {icon:'🧪',name:'Reazione chimica',desc:'Mescola bicarbonato e aceto e studia cosa succede',xp:40},
+  {icon:'🌡️',name:'Misura qualcosa',desc:'Misura la temperatura, il peso o la velocità di qualcosa in casa',xp:30},
+  {icon:'🔭',name:'Osserva il cielo',desc:'Identifica 3 stelle o costellazioni nel cielo notturno',xp:45},
+  {icon:'🌿',name:'Studia una pianta',desc:'Scegli una pianta e studia come funziona la fotosintesi',xp:35},
+  {icon:'🐜',name:'Osserva gli insetti',desc:'Trova e osserva un insetto per almeno 5 minuti',xp:30},
+  {icon:'💡',name:'Come funziona?',desc:'Scegli un oggetto casalingo e studia come funziona dentro',xp:40},
+  {icon:'🌊',name:"Esperimento sull'acqua",desc:"Studia la tensione superficiale dell'acqua con un esperimento",xp:45},
+  {icon:'🧲',name:'Gioca con i magneti',desc:'Fai 3 esperimenti diversi con un magnete',xp:35},
+  {icon:'⚡',name:'Elettricità statica',desc:"Fai 2 esperimenti sull'elettricità statica",xp:40},
+  {icon:'🔧',name:'Costruisci qualcosa',desc:'Costruisci un oggetto utile con materiali che hai in casa',xp:65},
+  {icon:'📦',name:'Origami avanzato',desc:'Segui un tutorial e piega una figura di origami difficile',xp:50},
+  {icon:'🪡',name:'Impara a cucire',desc:'Ripara o crea qualcosa di semplice con ago e filo',xp:55},
+  {icon:'🎀',name:'Crea un braccialetto',desc:'Fai un braccialetto intrecciato o con perline',xp:40},
+  {icon:'🖼️',name:'Decora qualcosa',desc:'Personalizza un oggetto (scarpe, zaino, quaderno) a modo tuo',xp:50},
+  {icon:'🪴',name:'Crea un terrario',desc:'Fai un mini ecosistema in un barattolo di vetro',xp:60},
+  {icon:'📮',name:'Crea una cartolina',desc:'Fai a mano una cartolina bella e inviala a qualcuno',xp:45},
+  {icon:'🕯️',name:'Fai una candela',desc:'Crea una candela fai-da-te con cera e uno stoppino',xp:55},
+  {icon:'🎪',name:'Costruisci un modellino',desc:'Costruisci un modellino di carta, legno o altro materiale',xp:60},
+  {icon:'🧸',name:'Ripara un vecchio giocattolo',desc:'Prendi un vecchio giocattolo rotto e cerca di aggiustarlo',xp:45},
+  {icon:'⚡',name:'Sfida dei 2 minuti',desc:"Fai qualcosa di utile ogni 2 minuti per mezz'ora di fila",xp:50},
+  {icon:'🤫',name:'Ora di silenzio',desc:"Non parlare per un'ora intera",xp:40},
+  {icon:'⬅️',name:'Fai tutto al contrario',desc:'Per 30 minuti fai tutto con la mano non dominante',xp:45},
+  {icon:'🚿',name:'Doccia fredda',desc:'Fai una doccia completamente fredda',xp:55},
+  {icon:'🎯',name:'Obiettivo del giorno',desc:'Scegli una cosa importante da fare e falla senza rimandare',xp:50},
+  {icon:'🧳',name:'Preparati in 5 minuti',desc:'Preparati completamente per uscire in meno di 5 minuti',xp:35},
+  {icon:'🔕',name:'Silenzio totale',desc:'Passa 30 minuti in silenzio assoluto senza musica né video',xp:40},
+  {icon:'🏁',name:'Finisci qualcosa',desc:'Finisci qualcosa che avevi lasciato a metà da giorni',xp:60},
+  {icon:'🌟',name:'Inventa un personaggio',desc:'Crea un personaggio con storia, poteri e debolezze',xp:50},
+  {icon:'🗡️',name:'Racconto fantasy',desc:"Scrivi l'inizio di una storia fantasy di almeno 1 pagina",xp:55},
+  {icon:'🚀',name:'Missione spaziale',desc:'Inventa una missione su un pianeta e disegna la navicella',xp:60},
+  {icon:'🏰',name:'Mappa fantasy',desc:'Crea una mappa di un mondo immaginario con nomi e luoghi',xp:55},
+  {icon:'🤖',name:'Inventa un robot',desc:'Disegna e descrivi un robot con funzione specifica',xp:45},
+  {icon:'🎮',name:'Inventa un videogioco',desc:'Crea il concept di un videogioco: personaggio, storia, livelli',xp:60},
+  {icon:'🌍',name:'Salva il mondo',desc:'Scrivi un piano per risolvere un problema del mondo reale',xp:55},
+  {icon:'🦸',name:'Il tuo supereroe',desc:'Crea il tuo alter ego da supereroe con costume e poteri',xp:50},
+  {icon:'📡',name:'Messaggio agli alieni',desc:'Scrivi un messaggio da mandare agli extraterrestri',xp:40},
+  {icon:'🔑',name:'I tuoi valori',desc:'Scrivi le 5 cose più importanti nella tua vita e perché',xp:40},
+  {icon:'💭',name:'Il tuo futuro',desc:'Descrivi in dettaglio come vuoi essere tra 10 anni',xp:45},
+  {icon:'😤',name:'Le tue paure',desc:'Scrivi 3 cose che ti fanno paura e un piano per affrontarle',xp:50},
+  {icon:'🏆',name:'I tuoi successi',desc:'Elenca 10 cose di cui sei orgoglioso nella tua vita',xp:35},
+  {icon:'📈',name:'Piano di miglioramento',desc:'Scegli una cosa che vuoi migliorare e scrivi un piano settimanale',xp:50},
+  {icon:'🎯',name:'I tuoi obiettivi',desc:'Scrivi 3 obiettivi grandi e 3 piccoli da raggiungere questo mese',xp:45},
+  {icon:'❤️',name:'Cosa ami fare',desc:'Elenca 15 cose che ti piacciono davvero fare',xp:30},
+  {icon:'🤔',name:'Domanda difficile',desc:'Rispondi onestamente: cosa vorresti cambiare di te?',xp:45},
+  {icon:'📊',name:'La settimana perfetta',desc:"Disegna l'orario della tua settimana ideale",xp:40},
+  {icon:'🌱',name:'Una nuova abitudine',desc:'Scegli una nuova abitudine positiva e falla per 3 giorni di fila',xp:55},
+  {icon:'🎓',name:'Tutorial di 30 minuti',desc:'Impara qualcosa di nuovo seguendo un tutorial online',xp:50},
+  {icon:'📐',name:'Geometria creativa',desc:'Studia i frattali e disegnane uno a mano',xp:55},
+  {icon:'🎨',name:'Storia dell\'arte',desc:"Studia un artista famoso e rifai una sua opera a modo tuo",xp:55},
+  {icon:'🔭',name:'Sistema solare',desc:'Studia i pianeti del sistema solare e disegnali con le proporzioni',xp:45},
+  {icon:'⚗️',name:'Elementi chimici',desc:'Impara i primi 20 elementi della tavola periodica',xp:50},
+  {icon:'🏛️',name:'Storia antica',desc:'Studia una civiltà antica per 20 minuti',xp:40},
+  {icon:'🎵',name:'Teoria musicale',desc:'Studia le note musicali e impara a leggere uno spartito semplice',xp:55},
+  {icon:'📏',name:'Matematica reale',desc:'Trova 5 esempi di matematica che usi ogni giorno senza accorgertene',xp:35},
+  {icon:'🌿',name:'Ecologia',desc:'Studia come puoi ridurre la tua impronta ecologica',xp:40},
+  {icon:'🎲',name:'Gioco da tavolo',desc:'Fai una partita completa a un gioco da tavolo con qualcuno',xp:40},
+  {icon:'🃏',name:'Torneo di carte',desc:'Organizza o partecipa a una partita di carte con almeno 2 persone',xp:45},
+  {icon:'🏆',name:'Sfida un amico',desc:'Sfida un amico in qualsiasi cosa e porta a termine la gara',xp:50},
+  {icon:'🤝',name:'Fai del bene',desc:'Fai qualcosa di utile per il tuo quartiere o comunità',xp:65},
+  {icon:'👨‍👩‍👧',name:'Serata in famiglia',desc:"Organizza un'attività o gioco con la tua famiglia",xp:45},
+  {icon:'🎤',name:'Intervista qualcuno',desc:'Fai un\'intervista vera a qualcuno su un argomento interessante',xp:50},
+  {icon:'🎉',name:'Organizza una sorpresa',desc:'Fai una piccola sorpresa a qualcuno senza motivo',xp:55},
+  {icon:'🌍',name:'Aiuta qualcuno',desc:'Dedica 30 minuti ad aiutare qualcuno con qualcosa di concreto',xp:55},
+  {icon:'💡',name:"Inventa un'app",desc:"Disegna il mockup di un'app originale che ti piacerebbe usare",xp:60},
+  {icon:'🏗️',name:'Progetta una casa',desc:'Disegna la planimetria della casa dei tuoi sogni',xp:50},
+  {icon:'🚗',name:'Macchina del futuro',desc:'Disegna e descrivi la macchina che guiderai tra 20 anni',xp:45},
+  {icon:'👔',name:'Brand da zero',desc:'Inventa un brand con nome, logo e slogan',xp:55},
+  {icon:'🌮',name:'Nuovo piatto',desc:'Inventa una ricetta originale combinando ingredienti insoliti',xp:50},
+  {icon:'📱',name:'Social network inventato',desc:'Crea il concept di un social network nuovo: regole, funzionalità, nome',xp:55},
+  {icon:'🌍',name:'Paese immaginario',desc:'Inventa un paese con bandiera, lingua, cultura e storia',xp:65},
+  {icon:'⚽',name:'Nuovo sport',desc:'Inventa uno sport originale con regole complete',xp:55},
+  {icon:'🎓',name:'Scuola del futuro',desc:'Progetta la scuola ideale: materie, orari, regole',xp:50},
+  {icon:'🎭',name:'Personaggio storico alternativo',desc:'Scegli un personaggio storico e riscrivi la sua vita con scelte diverse',xp:55},
+  {icon:'🧩',name:'Memoria fotografica',desc:'Studia una pagina per 2 minuti poi riscrivila a memoria',xp:55},
+  {icon:'🗣️',name:'Scioglilingua',desc:'Impara e recita 5 scioglilingua velocissimi senza sbagliare',xp:40},
+  {icon:'🔄',name:'Pensa in contrario',desc:'Prendi 5 idee comuni e scrivi il loro esatto contrario',xp:40},
+  {icon:'🧲',name:'Associazioni creative',desc:'Collega 10 parole casuali in una storia che abbia senso',xp:45},
+  {icon:'♾️',name:'Paradosso logico',desc:'Studia un paradosso filosofico e spiega il tuo punto di vista',xp:55},
+  {icon:'🎯',name:'Concentrazione totale',desc:'Studia o lavora per 45 minuti senza MAI distrarti',xp:60},
+  {icon:'🌀',name:'Pensiero laterale',desc:'Risolvi 3 rompicapi di pensiero laterale',xp:50},
+  {icon:'📷',name:'Fotoracconto',desc:'Scatta 10 foto che raccontano la tua giornata',xp:45},
+  {icon:'🎬',name:'Time-lapse',desc:'Fai un video time-lapse di qualcosa che cambia nel tempo',xp:55},
+  {icon:'🖊️',name:'Blog post',desc:'Scrivi un articolo di blog di almeno 300 parole su un tema che ami',xp:50},
+  {icon:'🎙️',name:'Podcast da 5 minuti',desc:'Registra un mini podcast su un argomento che ti appassiona',xp:55},
+  {icon:'📹',name:'Tutorial video',desc:'Gira un tutorial video su qualcosa che sai fare bene',xp:60},
+  {icon:'📰',name:'Newsletter',desc:'Scrivi una mini newsletter su qualcosa di interessante che hai imparato',xp:45},
+  {icon:'🗞️',name:'Rassegna stampa',desc:'Leggi 3 notizie importanti di oggi e riassumile',xp:35},
+  {icon:'📌',name:'Mood board',desc:'Crea una mood board visiva che rappresenta come ti senti oggi',xp:40},
+  {icon:'🎞️',name:'Stop motion',desc:'Crea un piccolo video stop motion con oggetti o disegni',xp:70},
+];
+
+const allDaily = [
+  {title:'Costruisci qualcosa con quello che hai in casa 🔧',desc:"Prenditi 20 minuti, guarda cosa hai in giro, e costruisci o assembla qualcosa di originale.",xp:80},
+  {title:'Impara 5 parole in giapponese 🇯🇵',desc:'Guarda un video su YouTube e impara almeno 5 parole in giapponese. Scrivile a memoria.',xp:75},
+  {title:'Registra un video di 1 minuto 🎬',desc:'Fai un video su qualcosa che ti appassiona. Non deve essere perfetto, deve essere autentico.',xp:85},
+  {title:'Allenati per 20 minuti senza sosta ⚡',desc:'Qualsiasi sport o esercizio. 20 minuti nonstop senza guardare il telefono.',xp:80},
+  {title:'Crea una playlist per ogni umore 🎵',desc:'Fai 3 playlist: una per quando sei carico, una per quando sei rilassato, una per quando sei giù.',xp:70},
+  {title:'Scrivi una lettera al tuo futuro sé ✉️',desc:'Cosa vuoi diventare? Cosa speri di aver fatto tra 5 anni? Scrivilo.',xp:75},
+  {title:"Impara a fare qualcosa con le mani 🖐️",desc:'Origami, nodo marinaro, mazzo di carte — impara una nuova abilità manuale.',xp:80},
+  {title:'Fai qualcosa di generoso oggi 🤲',desc:'Fai qualcosa di inaspettato per qualcuno senza aspettarti niente in cambio.',xp:75},
+  {title:'Sfida la tua zona di comfort 😤',desc:'Fai una cosa che normalmente eviti perché ti mette a disagio.',xp:90},
+  {title:'Disegna il tuo mondo perfetto 🌍',desc:'Disegna o descrivi in dettaglio come sarebbe il mondo se potessi cambiarlo.',xp:70},
+  {title:'Stai senza social per tutta la giornata 📵',desc:'Niente Instagram, TikTok, YouTube. Solo la vita vera per 24 ore.',xp:100},
+  {title:'Parla con uno sconosciuto 👋',desc:'Fai una conversazione vera con qualcuno che non conosci (in sicurezza).',xp:85},
+  {title:'Cucina un piatto straniero 🍜',desc:'Scegli una ricetta di un paese diverso dal tuo e cucinala da zero.',xp:80},
+  {title:"Impara qualcosa in 1 ora ⏱️",desc:"Scegli un'abilità nuova e allenati per un'ora di fila.",xp:85},
+  {title:'Fai una donazione o volontariato 🫶',desc:'Dona qualcosa (tempo, oggetti, denaro) o fai volontariato.',xp:90},
+];
+
+function getDaySeed() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000);
+}
+
+function seededPick(arr, seed, count) {
+  const copy = [...arr]; const result = []; let s = seed;
+  for (let i = 0; i < count && copy.length > 0; i++) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    result.push(copy.splice(Math.abs(s) % copy.length, 1)[0]);
+  }
+  return result;
+}
+
+const seed = getDaySeed();
+const todayDaily = seededPick(allDaily, seed, 1)[0];
+const todayChallenges = seededPick(allChallenges, seed + 1, 5);
+
+let xp = 0, level = 1, streak = 0, done = 0, dailyDone = false;
+const chDone = new Array(5).fill(false);
+
+function setupDate() {
+  const now = new Date();
+  const days = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+  const months = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  document.getElementById('date-pill').textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  document.getElementById('day-label').textContent = days[now.getDay()];
+}
+
+function setupDaily() {
+  document.getElementById('daily-title').textContent = todayDaily.title;
+  document.getElementById('daily-desc').textContent = todayDaily.desc;
+  document.getElementById('daily-xp').textContent = '+' + todayDaily.xp + ' XP';
+}
+
+function renderChallenges() {
+  document.getElementById('ch-list').innerHTML = todayChallenges.map((c, i) => {
+    const d = chDone[i];
+    return `<div class="ch-card${d?' done':''}" id="ch-${i}" onclick="completeChallenge(${i})">
+      <div class="ch-icon-wrap">${c.icon}</div>
+      <div class="ch-info">
+        <div class="ch-name">${c.name}</div>
+        <div class="ch-desc">${c.desc}</div>
+      </div>
+      <div class="ch-right">
+        <div class="ch-xp">+${c.xp}</div>
+        <div class="check-circle">${d?'✓':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const achievements = [
+  {ico:'🚀',name:'Prima sfida',cond:(d)=>d>=1},
+  {ico:'⚡',name:'5 sfide',cond:(d)=>d>=5},
+  {ico:'💪',name:'10 sfide',cond:(d)=>d>=10},
+  {ico:'🔥',name:'Streak 3',cond:(d,s)=>s>=3},
+  {ico:'🏆',name:'Livello 5',cond:(d,s,l)=>l>=5},
+  {ico:'💎',name:'Leggenda',cond:(d,s,l)=>l>=10},
+];
+
+function renderAch() {
+  document.getElementById('ach-grid').innerHTML = achievements.map(a => {
+    const u = a.cond(done, streak, level);
+    return `<div class="ach ${u?'unlocked':'locked'}"><span class="ach-ico">${a.ico}</span><div class="ach-n">${a.name}</div></div>`;
+  }).join('');
+}
+
+function updateUI() {
+  const xpMod = xp % 500;
+  document.getElementById('xp-fill').style.width = (xpMod/500*100)+'%';
+  document.getElementById('xp-cur').textContent = xpMod;
+  document.getElementById('level-num').textContent = 'LV. '+level;
+  document.getElementById('streak').textContent = streak;
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-streak').textContent = streak;
+  document.getElementById('s-xp').textContent = xp;
+  document.getElementById('s-lv').textContent = level;
+  renderAch();
+}
+
+function addXP(amount) {
+  xp += amount; done++; streak++;
+  const newLv = Math.floor(xp/500)+1;
+  if (newLv > level) { level = newLv; setTimeout(()=>showToast('🏆 Livello '+level+' sbloccato!'),700); }
+  updateUI();
+}
+
+function completeDaily() {
+  if (dailyDone) return;
+  dailyDone = true;
+  const btn = document.getElementById('daily-btn');
+  btn.textContent = '✓ Fatto!';
+  btn.classList.add('done');
+  addXP(todayDaily.xp);
+  showToast('⚡ +'+todayDaily.xp+' XP!');
+}
+
+function completeChallenge(i) {
+  if (chDone[i]) return;
+  chDone[i] = true;
+  addXP(todayChallenges[i].xp);
+  showToast('⚡ +'+todayChallenges[i].xp+' XP!');
+  renderChallenges();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+setupDate();
+setupDaily();
+renderChallenges();
+setTimeout(updateUI, 150);
+</script>
+</body>
+</html>

@@ -13,9 +13,9 @@
       "purpose": "maskable"
     }
   ],
-  "start_url": "/index.html",
+   "start_url": "/Grind/index.html",
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#000000",
-  "scope": "/"
+  "scope": "/Grind/"
 }

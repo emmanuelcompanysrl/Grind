@@ -523,5 +523,13 @@ setupDaily();
 renderChallenges();
 setTimeout(updateUI, 150);
 </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Grind/sw.js')
+      .then(() => console.log("Service Worker Registrato!"))
+      .catch(err => console.log("Errore:", err));
+  }
+</script>
+
 </body>
 </html>

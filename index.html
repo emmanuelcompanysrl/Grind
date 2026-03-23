@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -375,8 +375,41 @@ const seed = getDaySeed();
 const todayDaily = seededPick(allDaily, seed, 1)[0];
 const todayChallenges = seededPick(allChallenges, seed + 1, 5);
 
-let xp = 0, level = 1, streak = 0, done = 0, dailyDone = false;
-const chDone = new Array(5).fill(false);
+// --- localStorage helpers ---
+const TODAY_KEY = 'grind_day_' + seed;
+
+function loadState() {
+  const global = JSON.parse(localStorage.getItem('grind_global') || '{}');
+  const daily  = JSON.parse(localStorage.getItem(TODAY_KEY)     || '{}');
+  return {
+    xp:         global.xp        ?? 0,
+    level:      global.level     ?? 1,
+    streak:     global.streak    ?? 0,
+    done:       global.done      ?? 0,
+    lastDay:    global.lastDay   ?? null,
+    dailyDone:  daily.dailyDone  ?? false,
+    chDone:     daily.chDone     ?? new Array(5).fill(false),
+  };
+}
+
+function saveGlobal() {
+  localStorage.setItem('grind_global', JSON.stringify({ xp, level, streak, done, lastDay }));
+}
+
+function saveDaily() {
+  localStorage.setItem(TODAY_KEY, JSON.stringify({ dailyDone, chDone }));
+}
+
+// --- load saved state ---
+let { xp, level, streak, done, lastDay, dailyDone, chDone } = loadState();
+
+// streak reset if a day was skipped
+const todayStr = String(seed);
+if (lastDay !== null && lastDay !== todayStr && lastDay !== String(seed - 1)) {
+  streak = 0;
+}
+lastDay = todayStr;
+saveGlobal();
 
 function setupDate() {
   const now = new Date();
@@ -390,6 +423,11 @@ function setupDaily() {
   document.getElementById('daily-title').textContent = todayDaily.title;
   document.getElementById('daily-desc').textContent = todayDaily.desc;
   document.getElementById('daily-xp').textContent = '+' + todayDaily.xp + ' XP';
+  if (dailyDone) {
+    const btn = document.getElementById('daily-btn');
+    btn.textContent = '✓ Fatto!';
+    btn.classList.add('done');
+  }
 }
 
 function renderChallenges() {
@@ -443,6 +481,7 @@ function addXP(amount) {
   const newLv = Math.floor(xp/500)+1;
   if (newLv > level) { level = newLv; setTimeout(()=>showToast('🏆 Livello '+level+' sbloccato!'),700); }
   updateUI();
+  saveGlobal();
 }
 
 function completeDaily() {
@@ -453,6 +492,7 @@ function completeDaily() {
   btn.classList.add('done');
   addXP(todayDaily.xp);
   showToast('⚡ +'+todayDaily.xp+' XP!');
+  saveDaily();
 }
 
 function completeChallenge(i) {
@@ -461,6 +501,7 @@ function completeChallenge(i) {
   addXP(todayChallenges[i].xp);
   showToast('⚡ +'+todayChallenges[i].xp+' XP!');
   renderChallenges();
+  saveDaily();
 }
 
 function showToast(msg) {
